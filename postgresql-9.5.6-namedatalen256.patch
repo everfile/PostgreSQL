@@ -1,0 +1,12 @@
+diff -uNr ./src/include/pg_config_manual.h ../postgresql-9.5.6/src/include/pg_config_manual.h
+--- ./src/include/pg_config_manual.h	2017-04-12 08:44:35.000000000 +0800
++++ ../postgresql-9.5.6/src/include/pg_config_manual.h	2017-04-12 08:45:28.000000000 +0800
+@@ -20,7 +20,7 @@
+  *
+  * Changing this requires an initdb.
+  */
+-#define NAMEDATALEN 64
++#define NAMEDATALEN 256
+ 
+ /*
+  * Maximum number of arguments to a function.
