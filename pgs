@@ -1,0 +1,141 @@
+#! /bin/bash
+
+# 判断是否是Mac
+is_mac(){
+	uname=`uname`
+	if [ "X${uname}" == "XDarwin" ]; then
+		return 0 # is mac
+	else
+		return 1 # not is mac
+	fi
+}
+
+# Installation PREFIX
+PREFIX="/usr/local"
+
+# Data directory
+PGDATA="/var/www/pgsql"
+
+# Config file
+CONFIG_FILE="/usr/local/etc/postgresql.conf"
+
+# Who to run the postmaster as, usually "postgres".  (NOT "root")
+PGUSER="www-data"
+
+## STOP EDITING HERE
+
+# What to use to start up the postmaster (we do NOT use pg_ctl for this,
+# as it adds no value and can cause the postmaster to misrecognize a stale
+# lock file)
+DAEMON="$PREFIX/bin/postmaster"
+
+# What to use to shut down the postmaster
+PGCTL="$PREFIX/bin/pg_ctl"
+
+# 检测是否私有具有 root 权限
+if [ $UID -ne 0 ]; then
+	echo "You do not have permission, Please run the command as root!"
+	exit 0
+fi
+
+set -e
+
+# Only start if we can find the postgresql.
+test -x $DAEMON || exit 0
+
+# 是否运行
+is_running(){
+	if is_mac ; then
+		pid=`ps -eo pid,args | awk '/\/usr\/local\/bin\/postmaster -D/ {print $1}'`
+	else
+		pid=`ps -eo pid,args | awk '/\/usr\/local\/bin\/postmaster -D/ {print $1}'`
+	fi
+
+	if [ "X${pid}" != "X" ]; then
+		return 0 # running
+	else
+		return 1 # not running
+	fi
+}
+
+# 状态
+status(){
+	if is_running ; then
+		echo "PgSQL is running ..."
+		su - $PGUSER -c "$PGCTL status -D '$PGDATA'"
+	else
+		echo "PgSQL is not running ..."
+	fi
+}
+
+# 启动
+start(){
+	if is_running ; then
+		echo "PgSQL is already running..."
+		exit 0
+	fi
+	echo -n "Starting PgSQL:"
+	su - $PGUSER -c "$DAEMON -D '$PGDATA' -c config_file=$CONFIG_FILE >/tmp/pgsql-start.log &" >/dev/null 2>&1
+	echo "ok"
+}
+
+# 停止
+stop(){
+	if ! is_running ; then
+		echo "PgSQL is not running..."
+		exit 0
+	fi
+	echo -n "Stopping PgSQL:"
+	# 安全平滑停止
+	su - $PGUSER -c "$PGCTL stop -D '$PGDATA'"
+	echo "ok"
+}
+
+# Parse command line parameters.
+case $1 in
+	# 英文启动
+	start)
+		start
+	;;
+	# 英文停止
+	stop)
+		stop
+	;;
+	# 英文重启
+	restart)
+		stop
+		sleep 1
+		start
+	;;
+	# 英文状态
+	status)
+		status
+	;;
+
+	# 拼音启动
+	q)
+		start
+	;;
+	# 拼音停止
+	t)
+		stop
+	;;
+	# 拼音重启
+	c)
+		stop
+		sleep 1
+		start
+	;;
+	# 拼音状态
+	z)
+		status
+	;;
+
+	*)
+	# Print help
+		echo "Usage:$0 {start|stop|status|restart}" 1>&2
+		exit 0
+	;;
+esac
+
+exit 0
