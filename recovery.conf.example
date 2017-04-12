@@ -1,0 +1,10 @@
+# 恢复配置，只有作为从库时，文件名才是 recovery.conf ，否则是：recovery.conf.example（备用）
+
+# 是否设置为从库
+standby_mode = on
+
+# 如果设置为从库，其对应的主库的连接信息
+primary_conninfo = 'host=192.168.144.123 port=5432 user=localroot'
+
+# 设置这个流复制同步到最新的数据
+recovery_target_timeline = 'latest'
